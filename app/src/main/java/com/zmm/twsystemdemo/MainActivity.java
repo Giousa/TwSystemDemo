@@ -7,6 +7,9 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.zmm.twsystemdemo.client.Client;
+import com.zmm.twsystemdemo.utils.ToastUtils;
+import com.zmm.twsystemdemo.utils.UIUtils;
+
 import java.util.Timer;
 import java.util.TimerTask;
 import android.os.Handler;
@@ -28,14 +31,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static int period = 1000;  //1s
     private static final int UPDATE_TEXTVIEW = 0;
     private int mSpeed = 10;
+    private Button mConnect;
+    private Button mSend;
+    private Button mStop;
+    private Button mClear;
+
+    private boolean isOk = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //System
-//        initView();
+        mConnect = findViewById(R.id.btn_connect);
+        mSend = findViewById(R.id.btn_send);
+        mStop = findViewById(R.id.btn_stop);
+        mClear = findViewById(R.id.btn_clear);
+        mTvContent = findViewById(R.id.tv_content);
 
     }
 
@@ -47,21 +59,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initView() {
-        Button send = findViewById(R.id.btn_send);
-        Button stop = findViewById(R.id.btn_stop);
-        Button clear = findViewById(R.id.btn_clear);
-        mTvContent = findViewById(R.id.tv_content);
+
 
 //        //模拟json
 //        mSimulateID = "requestData={\"loginId\":\"TW2018-TEST-ID\",\"s_id\":\"TW2018-TEST-ID\",\"s_name\":\"TW2018\",\"curSpeed\":\"25\",\"curResistance\":\"3\",\"curDirection\":\"1\",\"calories\":\".000\",\"passiveMileage\":\".000\",\"spasmLevel\":\"6\",\"spasmTimes\":\"0\"}";
 
-        send.setOnClickListener(this);
-        clear.setOnClickListener(this);
-        stop.setOnClickListener(this);
+        mConnect.setOnClickListener(this);
+        mSend.setOnClickListener(this);
+        mClear.setOnClickListener(this);
+        mStop.setOnClickListener(this);
 
+        //初始化客户端
         mClient = new Client(hostIp);
         mClient.setClientListener(this);
-        mClient.start();
+
     }
 
     @Override
@@ -69,8 +80,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (view.getId()){
 
+            case R.id.btn_connect:
+                connectToDevice();
+                break;
+
             case R.id.btn_send:
-                startTimer();
+
+                if(isOk){
+                    startTimer();
+                }else {
+                    ToastUtils.SimpleToast("当前未连接");
+                }
                 break;
 
             case R.id.btn_stop:
@@ -82,6 +102,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
 
+
+    }
+
+    /**
+     * 连接机顶盒
+     */
+    private void connectToDevice() {
+
+        mConnect.setClickable(false);
+        mConnect.setText("正在连接中...");
+
+        //连接
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mClient.start();
+            }
+        }).start();
 
     }
 
@@ -105,8 +143,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     @Override
-    public void onClientListener(String msg,int flag) {
-        mTvContent.append(msg+"\n");
+    public void onClientListener(final String msg, final int flag) {
+
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mTvContent.append(msg+"\n");
+                switch (flag){
+                    case 0:
+                        isOk = false;
+                        mConnect.setClickable(true);
+                        mConnect.setText("连接失败");
+                        break;
+
+                    case 1:
+                        isOk = true;
+                        mConnect.setClickable(false);
+                        mConnect.setText("连接成功");
+                        break;
+
+                    case 2:
+                        isOk = false;
+                        mConnect.setClickable(false);
+                        mConnect.setText("继续连接...");
+                        break;
+
+                    case 3:
+                        isOk = false;
+                        mConnect.setClickable(true);
+                        mConnect.setText("连接异常");
+                        break;
+                }
+
+            }
+        });
     }
 
 

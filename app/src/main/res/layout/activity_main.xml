@@ -16,6 +16,7 @@
         android:layout_height="wrap_content"/>
 
     <TextView
+        android:visibility="invisible"
         android:textSize="15sp"
         android:text="备注：开机默认连接机顶盒"
         android:layout_width="match_parent"
@@ -59,10 +60,16 @@
         android:layout_height="wrap_content"/>
 
     <Button
+        android:id="@+id/btn_connect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="连接机顶盒！！"/>
+
+    <Button
         android:id="@+id/btn_send"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="向机顶盒发送虚假数据"/>
+        android:text="向机顶盒发送模拟数据"/>
 
     <Button
         android:id="@+id/btn_stop"
